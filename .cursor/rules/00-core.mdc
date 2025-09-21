@@ -1,0 +1,10 @@
+---
+description: Core principles for ArryByte Quantify X
+alwaysApply: true
+---
+
+- Non-custodial MVP: signals marketplace with commit–reveal; no pooled assets.
+- Pseudocode-first: never emit code unless asked to "apply".
+- Keep diffs tiny; prefer incremental PRs.
+- Document decisions in /docs/decisions/YYYY-MM-DD.md (1–3 bullets).
+

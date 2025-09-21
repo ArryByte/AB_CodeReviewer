@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ab-reviewer"
+version = "0.1.0"
+description = "Automated code review workflow with AI integration"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "AB Code Reviewer", email = "ab@example.com"},
+]
+keywords = ["code-review", "ai", "quality", "automation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "click>=8.0.0",
+    "pyyaml>=6.0",
+    "colorama>=0.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "black>=22.0.0",
+    "pylint>=2.15.0",
+    "bandit>=1.7.0",
+]
+
+[project.scripts]
+ab-reviewer = "ab_reviewer.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ab-code-reviewer/ab-reviewer"
+Repository = "https://github.com/ab-code-reviewer/ab-reviewer"
+Issues = "https://github.com/ab-code-reviewer/ab-reviewer/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ab_reviewer*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.pylint]
+max-line-length = 88
+disable = ["C0114", "C0116"]

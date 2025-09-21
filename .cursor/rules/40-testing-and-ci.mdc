@@ -1,0 +1,8 @@
+---
+description: Testing and CI
+alwaysApply: true
+---
+
+- Write tests (or a lightweight harness) before implementation when feasible.
+- CI must run format, lint, and tests; block merges on failures.
+

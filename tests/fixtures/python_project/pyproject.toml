@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "test-project"
+version = "0.1.0"
+description = "Test project for AB Code Reviewer"
+requires-python = ">=3.8"
+dependencies = [
+    "click>=8.0.0",
+]

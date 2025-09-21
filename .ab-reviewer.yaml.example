@@ -1,0 +1,27 @@
+# AB Code Reviewer Configuration Example
+# Copy this to .ab-reviewer.yaml and modify as needed
+
+# Override only what you need to change from defaults
+tools:
+  formatter:
+    enabled: true
+    args: ["--check", "--diff"]
+  
+  linter:
+    enabled: true
+    args: ["--max-line-length=88", "--output-format=text", "--score=no"]
+  
+  security:
+    enabled: true
+    args: ["-r", ".", "-f", "json", "-ll"]  # Include low-level issues
+  
+  tests:
+    enabled: true
+    args: ["--cov", "--cov-report=term-missing", "-v"]
+
+ai:
+  enabled: true
+  context:
+    include_git_diff: true
+    include_test_results: true
+    max_context_lines: 1000

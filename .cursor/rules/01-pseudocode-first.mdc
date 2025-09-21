@@ -1,0 +1,10 @@
+---
+description: Enforce design-first output format
+alwaysApply: true
+---
+
+When the user asks for a feature/change:
+1) Produce **Assumptions → Pseudocode → File Plan → Test Plan**.
+2) Stop. Await explicit approval to generate code.
+3) When approved, produce the smallest possible diffs and reference exact paths.
+

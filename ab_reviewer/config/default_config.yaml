@@ -1,0 +1,29 @@
+project:
+  type: python
+  python_version: "3.8+"
+
+tools:
+  formatter:
+    tool: black
+    enabled: true
+    args: ["--check", "--diff"]
+  linter:
+    tool: pylint
+    enabled: true
+    args: ["--output-format=text", "--score=no"]
+  security:
+    tool: bandit
+    enabled: true
+    args: ["-r", ".", "-f", "json"]
+  tests:
+    tool: pytest
+    enabled: true
+    args: ["--cov", "--cov-report=term-missing", "-v"]
+
+ai:
+  tool: gemini-cli
+  enabled: true
+  context:
+    include_git_diff: true
+    include_test_results: true
+    max_context_lines: 1000
