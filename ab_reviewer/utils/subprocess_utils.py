@@ -4,82 +4,78 @@ import subprocess
 import logging
 from pathlib import Path
 from typing import List, Tuple, Optional
+import shutil
 
 from .exceptions import ToolExecutionError, ToolNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 def run_command(
     cmd: List[str],
     cwd: Optional[Path] = None,
     timeout: int = 300,
-    capture_output: bool = True
+    capture_output: bool = True,
 ) -> Tuple[bool, str]:
     """
-    Run a command and return success status and output.
-    
-    Args:
-        cmd: Command to execute
-        cwd: Working directory
-        timeout: Timeout in seconds
-        capture_output: Whether to capture output
-        
-    Returns:
-        Tuple of (success, output)
-        
-    Raises:
-        ToolExecutionError: If command execution fails
-        ToolNotFoundError: If command not found
+    Run a command and return (success, output).
+
+    - cmd: list of arguments (no shell=True)
+    - returns: (True, combined_output) on returncode==0, else (False, combined_output)
+    - raises ToolNotFoundError if binary is missing
+    - raises ToolExecutionError for abnormal termination with non-zero exit if you prefer exceptions
     """
-    logger = logging.getLogger(__name__)
-    
+    if not cmd:
+        raise ValueError("cmd must be a non-empty list")
+
+    if shutil.which(cmd[0]) is None:
+        raise ToolNotFoundError(f"Tool not found: {cmd[0]}")
+
     try:
-        logger.debug(f"Running command: {' '.join(cmd)}")
+        logger.debug("Running command: %s (cwd=%s)", " ".join(cmd), cwd)
         result = subprocess.run(
             cmd,
-            cwd=cwd,
+            cwd=str(cwd) if cwd else None,
             capture_output=capture_output,
             text=True,
-            timeout=timeout
+            timeout=timeout,
         )
-        
+
         output = ""
         if capture_output:
-            output = result.stdout + result.stderr
-        
+            output = (result.stdout or "") + (result.stderr or "")
+
         success = result.returncode == 0
-        return success, output
-        
-    except subprocess.TimeoutExpired:
-        error_msg = f"Command timed out: {' '.join(cmd)}"
-        logger.error(error_msg)
-        raise ToolExecutionError(error_msg)
-    except FileNotFoundError:
-        tool_name = cmd[0] if cmd else "unknown"
-        error_msg = f"Tool not found: {tool_name}. Please install it first."
-        logger.error(error_msg)
-        raise ToolNotFoundError(error_msg)
+        if not success:
+            # Optionally raise an exception instead of returning False
+            logger.debug("Command failed (code=%s): %s", result.returncode, output)
+            return False, output
+
+        return True, output
+
+    except subprocess.TimeoutExpired as e:
+        msg = f"Command timeout after {timeout}s: {' '.join(cmd)}"
+        logger.exception(msg)
+        raise ToolExecutionError(msg) from e
+    except FileNotFoundError as e:
+        msg = f"Command not found: {cmd[0]}"
+        logger.exception(msg)
+        raise ToolNotFoundError(msg) from e
     except Exception as e:
-        error_msg = f"Error running command: {str(e)}"
-        logger.error(error_msg)
-        raise ToolExecutionError(error_msg)
+        msg = f"Unexpected error running command: {' '.join(cmd)}"
+        logger.exception(msg)
+        raise ToolExecutionError(msg) from e
 
 
-def check_tool_available(tool_name: str, timeout: int = 10) -> bool:
+def check_tool_available(tool_name: str, timeout: int = 5) -> bool:
     """
-    Check if a tool is available.
-    
-    Args:
-        tool_name: Name of the tool to check
-        timeout: Timeout in seconds
-        
-    Returns:
-        True if tool is available, False otherwise
+    Check tool availability using shutil.which and a lightweight '--version' call.
     """
+    if shutil.which(tool_name) is None:
+        return False
     try:
         result = subprocess.run(
-            [tool_name, "--version"],
-            capture_output=True,
-            timeout=timeout
+            [tool_name, "--version"], capture_output=True, timeout=timeout, text=True
         )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError):

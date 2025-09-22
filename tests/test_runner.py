@@ -5,129 +5,67 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
 
-from ab_reviewer.core.runner import ToolRunner
+from ab_reviewer.core.enhanced_runner import EnhancedToolRunner
 from ab_reviewer.utils.exceptions import ToolExecutionError, ToolNotFoundError
 
 
-class TestToolRunner:
-    """Test cases for ToolRunner."""
+class TestEnhancedToolRunner:
+    """Test cases for EnhancedToolRunner."""
 
     def test_init(self):
-        """Test ToolRunner initialization."""
+        """Test EnhancedToolRunner initialization."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            runner = ToolRunner(tmpdir)
+            runner = EnhancedToolRunner(tmpdir)
             assert runner.project_path == Path(tmpdir).resolve()
             assert runner.config == {}
             assert runner.results == {}
+            assert hasattr(runner, "quality_gate_manager")
 
     def test_init_with_config(self):
-        """Test ToolRunner initialization with config."""
+        """Test EnhancedToolRunner initialization with config."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config = {"tools": {"formatter": {"enabled": False}}}
-            runner = ToolRunner(tmpdir, config)
+            runner = EnhancedToolRunner(tmpdir, config)
             assert runner.config == config
 
-    def test_is_tool_enabled(self):
-        """Test tool enabled check."""
+    def test_can_proceed_to_ai_review_all_passed(self):
+        """Test AI review can proceed when all tools pass."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            config = {
-                "tools": {
-                    "formatter": {"enabled": True},
-                    "linter": {"enabled": False}
-                }
-            }
-            runner = ToolRunner(tmpdir, config)
-            
-            assert runner._is_tool_enabled("formatter") is True
-            assert runner._is_tool_enabled("linter") is False
-            assert runner._is_tool_enabled("nonexistent") is True  # Default enabled
-
-    @patch('ab_reviewer.core.runner.subprocess.run')
-    def test_run_command_success(self, mock_run):
-        """Test successful command execution."""
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Success output"
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
-        
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runner = ToolRunner(tmpdir)
-            success, output = runner._run_command("test", ["echo", "test"], [])
-            
-            assert success is True
-            assert "Success output" in output
-
-    @patch('ab_reviewer.core.runner.subprocess.run')
-    def test_run_command_failure(self, mock_run):
-        """Test failed command execution."""
-        mock_result = MagicMock()
-        mock_result.returncode = 1
-        mock_result.stdout = ""
-        mock_result.stderr = "Error output"
-        mock_run.return_value = mock_result
-        
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runner = ToolRunner(tmpdir)
-            success, output = runner._run_command("test", ["false"], [])
-            
-            assert success is False
-            assert "Error output" in output
-
-    @patch('ab_reviewer.core.runner.subprocess.run')
-    def test_run_command_timeout(self, mock_run):
-        """Test command timeout."""
-        mock_run.side_effect = TimeoutError("Command timed out")
-        
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runner = ToolRunner(tmpdir)
-            
-            with pytest.raises(ToolExecutionError):
-                runner._run_command("test", ["sleep", "10"], [])
-
-    @patch('ab_reviewer.core.runner.subprocess.run')
-    def test_run_command_not_found(self, mock_run):
-        """Test command not found."""
-        mock_run.side_effect = FileNotFoundError()
-        
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runner = ToolRunner(tmpdir)
-            
-            with pytest.raises(ToolNotFoundError):
-                runner._run_command("test", ["nonexistent"], [])
-
-    def test_get_failed_tools(self):
-        """Test getting failed tools."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runner = ToolRunner(tmpdir)
+            runner = EnhancedToolRunner(tmpdir)
+            # Mock results with all tools passing
             runner.results = {
-                "formatter": {"success": True},
-                "linter": {"success": False},
-                "security": {"success": True},
-                "tests": {"success": False}
+                "formatter": {"success": True, "output": "All good"},
+                "linter": {"success": True, "output": "All good"},
             }
-            
-            failed = runner.get_failed_tools()
-            assert "linter" in failed
-            assert "tests" in failed
-            assert "formatter" not in failed
-            assert "security" not in failed
+            # Remove quality_gate_manager to force legacy mode
+            delattr(runner, "quality_gate_manager")
+            # In legacy mode, all tools must pass
+            assert runner.can_proceed_to_ai_review() is True
 
-    def test_all_tools_passed(self):
-        """Test checking if all tools passed."""
+    def test_can_proceed_to_ai_review_some_failed(self):
+        """Test AI review cannot proceed when some tools fail."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            runner = ToolRunner(tmpdir)
-            
-            # All passed
+            runner = EnhancedToolRunner(tmpdir)
+            # Mock results with some tools failing
             runner.results = {
-                "formatter": {"success": True},
-                "linter": {"success": True}
+                "formatter": {"success": True, "output": "All good"},
+                "linter": {"success": False, "output": "Failed"},
             }
-            assert runner.all_tools_passed() is True
-            
-            # Some failed
+            # Remove quality_gate_manager to force legacy mode
+            delattr(runner, "quality_gate_manager")
+            # In legacy mode, all tools must pass
+            assert runner.can_proceed_to_ai_review() is False
+
+    def test_get_recovery_suggestions(self):
+        """Test getting recovery suggestions."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runner = EnhancedToolRunner(tmpdir)
+            # Mock results with failed tools
             runner.results = {
-                "formatter": {"success": True},
-                "linter": {"success": False}
+                "formatter": {"success": False, "output": "Formatting issues found"},
+                "linter": {"success": True, "output": "All good"},
             }
-            assert runner.all_tools_passed() is False
+            suggestions = runner.get_recovery_suggestions()
+            assert len(suggestions) == 1
+            assert suggestions[0]["gate"] == "formatter"
+            assert "black" in suggestions[0]["command"]

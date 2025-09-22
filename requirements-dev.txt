@@ -1,0 +1,23 @@
+# Development and testing dependencies for AB Code Reviewer
+# Install with: pip install -r requirements-dev.txt
+
+# Testing framework - pinned for reproducible builds
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+# Code quality tools - pinned for reproducible builds
+black==23.11.0
+ruff==0.1.6
+isort==5.12.0
+bandit==1.7.5
+
+# Development tools - pinned for reproducible builds
+mypy==1.7.1
+
+# Security tools - pinned for reproducible builds
+safety==2.3.5
+pip-audit==2.6.1
+
+# Additional testing utilities - pinned for reproducible builds
+coverage==7.3.2

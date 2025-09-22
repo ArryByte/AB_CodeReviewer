@@ -15,7 +15,7 @@ class TestProjectDetector:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create pyproject.toml
             (Path(tmpdir) / "pyproject.toml").write_text("[build-system]")
-            
+
             detector = ProjectDetector(tmpdir)
             assert detector.detect_project_type() == "python"
 
@@ -24,7 +24,7 @@ class TestProjectDetector:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create setup.py
             (Path(tmpdir) / "setup.py").write_text("from setuptools import setup")
-            
+
             detector = ProjectDetector(tmpdir)
             assert detector.detect_project_type() == "python"
 
@@ -33,7 +33,7 @@ class TestProjectDetector:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create requirements.txt
             (Path(tmpdir) / "requirements.txt").write_text("click>=8.0.0")
-            
+
             detector = ProjectDetector(tmpdir)
             assert detector.detect_project_type() == "python"
 
@@ -42,7 +42,7 @@ class TestProjectDetector:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create Python file
             (Path(tmpdir) / "main.py").write_text("print('hello')")
-            
+
             detector = ProjectDetector(tmpdir)
             assert detector.detect_project_type() == "python"
 
@@ -51,7 +51,7 @@ class TestProjectDetector:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create non-Python file
             (Path(tmpdir) / "README.md").write_text("# Project")
-            
+
             detector = ProjectDetector(tmpdir)
             assert detector.detect_project_type() == "unknown"
 
@@ -60,7 +60,7 @@ class TestProjectDetector:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create .git directory
             (Path(tmpdir) / ".git").mkdir()
-            
+
             detector = ProjectDetector(tmpdir)
             assert detector._is_git_repository() is True
 
@@ -76,10 +76,10 @@ class TestProjectDetector:
             # Create Python project files
             (Path(tmpdir) / "pyproject.toml").write_text("[build-system]")
             (Path(tmpdir) / ".git").mkdir()
-            
+
             detector = ProjectDetector(tmpdir)
             info = detector.get_project_info()
-            
+
             assert info["type"] == "python"
             assert info["path"] == str(Path(tmpdir).resolve())
             assert info["is_git_repo"] is True

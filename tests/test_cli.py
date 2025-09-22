@@ -21,24 +21,13 @@ class TestCLI:
     def test_merge_configs(self):
         """Test configuration merging."""
         default = {
-            "tools": {
-                "linter": {
-                    "enabled": True,
-                    "args": ["--max-line-length=88"]
-                }
-            }
+            "tools": {"linter": {"enabled": True, "args": ["--max-line-length=88"]}}
         }
-        
-        override = {
-            "tools": {
-                "linter": {
-                    "args": ["--max-line-length=100"]
-                }
-            }
-        }
-        
+
+        override = {"tools": {"linter": {"args": ["--max-line-length=100"]}}}
+
         merged = merge_configs(default, override)
-        
+
         assert merged["tools"]["linter"]["enabled"] is True
         assert merged["tools"]["linter"]["args"] == ["--max-line-length=100"]
 
@@ -46,7 +35,7 @@ class TestCLI:
         """Test loading default configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config = load_configuration(None, Path(tmpdir))
-            
+
             assert "project" in config
             assert "tools" in config
             assert "ai" in config
@@ -57,14 +46,16 @@ class TestCLI:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create custom config
             config_file = Path(tmpdir) / "custom.yaml"
-            config_file.write_text("""
+            config_file.write_text(
+                """
 project:
   type: python
 tools:
   linter:
     enabled: false
-""")
-            
+"""
+            )
+
             config = load_configuration(config_file, Path(tmpdir))
-            
+
             assert config["tools"]["linter"]["enabled"] is False

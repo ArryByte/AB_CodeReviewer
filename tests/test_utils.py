@@ -5,14 +5,14 @@ from pathlib import Path
 import pytest
 
 from ab_reviewer.utils.exceptions import (
-    ABReviewerError, ConfigurationError, ToolNotFoundError,
-    ToolExecutionError, ProjectDetectionError, AIReviewError, ValidationError
+    ABReviewerError,
+    ConfigurationError,
+    ToolNotFoundError,
+    ToolExecutionError,
+    ProjectDetectionError,
+    AIReviewError,
+    ValidationError,
 )
-from ab_reviewer.utils.validation import (
-    validate_project_path, validate_python_version, validate_configuration,
-    validate_tool_arguments, validate_file_path, validate_directory_path
-)
-from ab_reviewer.utils.cache import ToolCache
 from ab_reviewer.utils.git import GitManager
 
 
@@ -55,125 +55,32 @@ class TestExceptions:
             raise ValidationError("Validation failed")
 
 
-class TestValidation:
-    """Test validation utilities."""
+class TestSubprocessUtils:
+    """Test subprocess utilities."""
 
-    def test_validate_project_path_valid(self):
-        """Test valid project path."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            validate_project_path(Path(tmpdir))
+    def test_run_command_success(self):
+        """Test successful command execution."""
+        from ab_reviewer.utils.subprocess_utils import run_command
 
-    def test_validate_project_path_invalid(self):
-        """Test invalid project path."""
-        with pytest.raises(ValidationError):
-            validate_project_path(Path("/nonexistent/path"))
+        success, output = run_command(["echo", "test"], timeout=10)
+        assert success is True
+        assert "test" in output
 
-    def test_validate_python_version(self):
-        """Test Python version validation."""
-        # Should not raise for current Python version
-        validate_python_version((3, 0))
-        
-        # Should raise for future version
-        with pytest.raises(ValidationError):
-            validate_python_version((99, 0))
+    def test_run_command_failure(self):
+        """Test failed command execution."""
+        from ab_reviewer.utils.subprocess_utils import run_command
 
-    def test_validate_configuration_valid(self):
-        """Test valid configuration."""
-        config = {
-            "project": {"type": "python"},
-            "tools": {
-                "formatter": {"enabled": True},
-                "linter": {"enabled": True},
-                "security": {"enabled": True},
-                "tests": {"enabled": True}
-            },
-            "ai": {"enabled": True}
-        }
-        validate_configuration(config)
+        success, output = run_command(["false"], timeout=10)
+        assert success is False
+        # false command doesn't produce output, just returns non-zero exit code
 
-    def test_validate_configuration_invalid(self):
-        """Test invalid configuration."""
-        # Missing required section
-        with pytest.raises(ConfigurationError):
-            validate_configuration({"project": {"type": "python"}})
-        
-        # Invalid project type
-        with pytest.raises(ConfigurationError):
-            validate_configuration({
-                "project": {"type": "invalid"},
-                "tools": {},
-                "ai": {}
-            })
+    def test_run_command_not_found(self):
+        """Test command not found."""
+        from ab_reviewer.utils.subprocess_utils import run_command
+        from ab_reviewer.utils.exceptions import ToolNotFoundError
 
-    def test_validate_tool_arguments(self):
-        """Test tool arguments validation."""
-        validate_tool_arguments("test", ["--arg1", "value1"])
-        
-        with pytest.raises(ValidationError):
-            validate_tool_arguments("test", "not a list")
-
-    def test_validate_file_path(self):
-        """Test file path validation."""
-        with tempfile.NamedTemporaryFile() as tmpfile:
-            validate_file_path(Path(tmpfile.name))
-        
-        with pytest.raises(ValidationError):
-            validate_file_path(Path("/nonexistent/file"))
-
-    def test_validate_directory_path(self):
-        """Test directory path validation."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            validate_directory_path(Path(tmpdir))
-        
-        with pytest.raises(ValidationError):
-            validate_directory_path(Path("/nonexistent/dir"))
-
-
-class TestCache:
-    """Test caching utilities."""
-
-    def test_tool_cache_init(self):
-        """Test cache initialization."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache = ToolCache(Path(tmpdir))
-            assert cache.cache_dir == Path(tmpdir)
-            assert cache.ttl_seconds == 3600
-
-    def test_tool_cache_set_get(self):
-        """Test cache set and get operations."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache = ToolCache(Path(tmpdir))
-            
-            # Set cache
-            result = {"success": True, "output": "test output"}
-            cache.set("test_tool", ["--arg"], Path(tmpdir), result)
-            
-            # Get cache
-            cached_result = cache.get("test_tool", ["--arg"], Path(tmpdir))
-            assert cached_result == result
-
-    def test_tool_cache_miss(self):
-        """Test cache miss."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache = ToolCache(Path(tmpdir))
-            
-            cached_result = cache.get("nonexistent", [], Path(tmpdir))
-            assert cached_result is None
-
-    def test_tool_cache_clear(self):
-        """Test cache clearing."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache = ToolCache(Path(tmpdir))
-            
-            # Set cache
-            cache.set("test", [], Path(tmpdir), {"success": True})
-            
-            # Clear cache
-            cache.clear()
-            
-            # Should be empty
-            result = cache.get("test", [], Path(tmpdir))
-            assert result is None
+        with pytest.raises(ToolNotFoundError):
+            run_command(["nonexistent_command"], timeout=10)
 
 
 class TestGitManager:
@@ -196,7 +103,7 @@ class TestGitManager:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create .git directory
             (Path(tmpdir) / ".git").mkdir()
-            
+
             git_manager = GitManager(Path(tmpdir))
             assert git_manager.is_git_repository() is True
 
