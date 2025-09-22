@@ -45,7 +45,7 @@ class GeminiClient:
             if tf_path and tf_path.exists():
                 try:
                     tf_path.unlink()
-                except Exception as e:
+                except Exception:
                     self.logger.exception("Failed to cleanup temp file %s", tf_path)
 
     def is_available(self) -> bool:

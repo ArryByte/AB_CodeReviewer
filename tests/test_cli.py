@@ -3,7 +3,6 @@
 import tempfile
 from pathlib import Path
 from click.testing import CliRunner
-import pytest
 
 from ab_reviewer.cli import main, load_configuration, merge_configs
 

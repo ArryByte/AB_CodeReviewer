@@ -4,7 +4,7 @@ import time
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
-from ..utils.exceptions import ToolExecutionError, ToolNotFoundError
+from ..utils.exceptions import ToolExecutionError
 from ..utils.subprocess_utils import run_command, check_tool_available
 from .gate_types import QualityGateConfig, QualityGateResult, GateStatus
 from .config_loader import ConfigLoader

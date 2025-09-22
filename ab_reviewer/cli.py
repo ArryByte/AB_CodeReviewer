@@ -23,7 +23,7 @@ from ab_reviewer.utils.exceptions import (
     AIReviewError,
     ValidationError,
 )
-from ab_reviewer.utils.logger import setup_logger, create_project_log_dir
+from ab_reviewer.utils.logger import setup_logger
 from ab_reviewer.utils.project_analyzer import ProjectAnalyzer
 from ab_reviewer.utils.report_generator import ReportGenerator
 
@@ -167,7 +167,7 @@ def main(
                 # Show summary
                 report_data = report_generator.generate_comprehensive_report()
                 summary = report_data.get("summary", {})
-                click.echo(f"\n📈 Summary:")
+                click.echo("\n📈 Summary:")
                 click.echo(f"  - Total Reviews: {summary.get('total_reviews', 0)}")
                 click.echo(
                     f"  - Project Health: {summary.get('overall_health', 'unknown').title()}"
@@ -193,7 +193,7 @@ def main(
             else:
                 log_dir = output_dir / "reviews/latest"
 
-        logger = setup_logger(
+        setup_logger(
             level=20 if verbose else 30, log_dir=log_dir, project_name=project_path.name
         )
 
@@ -264,9 +264,7 @@ def main(
                     click.echo(f"❌ Tool installation failed: {str(e)}")
                     sys.exit(1)
             else:
-                click.echo(
-                    "💡 Run with --install-tools to install missing dependencies"
-                )
+                click.echo("💡 Run with --install-tools to install missing dependencies")
                 sys.exit(1)
 
         # Run quality gates

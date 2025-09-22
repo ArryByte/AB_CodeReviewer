@@ -4,8 +4,7 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
-from ..utils.exceptions import ToolExecutionError, ToolNotFoundError
-from ..utils.subprocess_utils import run_command, check_tool_available
+from ..utils.subprocess_utils import run_command
 from .quality_gate import QualityGateManager, GateStatus
 
 
@@ -61,7 +60,7 @@ class EnhancedToolRunner:
 
             # Print summary
             summary = self.quality_gate_manager.get_summary()
-            print(f"\n📊 Quality Gates Summary:")
+            print("\n📊 Quality Gates Summary:")
             print(f"  ✅ Successful: {summary['successful']}/{summary['total_gates']}")
             print(f"  ❌ Failed: {summary['failed']}")
             print(f"  ⏭️  Skipped: {summary['skipped']}")

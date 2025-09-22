@@ -1,6 +1,5 @@
 """Test Python file for AB Code Reviewer."""
 
-import os
 from typing import List
 
 

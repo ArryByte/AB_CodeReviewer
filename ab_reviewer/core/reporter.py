@@ -1,9 +1,8 @@
 """Report generation for AB Code Reviewer."""
 
-import os
 from pathlib import Path
 from typing import Dict, Any, Optional
-from colorama import Fore, Style, init
+from colorama import Fore, init
 
 # Initialize colorama for cross-platform colored output
 init(autoreset=True)

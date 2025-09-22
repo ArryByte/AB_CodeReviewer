@@ -1,11 +1,12 @@
 """Python-specific tool integrations for AB Code Reviewer."""
 
 import os
+import subprocess
 import sys
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Tuple
 
-from ..utils.exceptions import ToolNotFoundError, ToolExecutionError, ValidationError
+from ..utils.exceptions import ToolExecutionError, ValidationError
 from ..utils.subprocess_utils import run_command, check_tool_available
 
 
@@ -191,5 +192,5 @@ ai:
                 gitignore_file.write_text(content, encoding="utf-8")
             else:
                 gitignore_file.write_text("\n".join(entries_to_add), encoding="utf-8")
-        except Exception as e:
+        except Exception:
             pass  # Ignore gitignore update failures

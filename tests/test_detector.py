@@ -2,7 +2,6 @@
 
 import tempfile
 from pathlib import Path
-import pytest
 
 from ab_reviewer.core.detector import ProjectDetector
 
